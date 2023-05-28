@@ -1,9 +1,11 @@
 import openai
 import PyPDF2
+from transformers import pipeline
+import tensorflow
 
 # 设置API Key
 # Setting OpenAI API Key
-openai.api_key = 'api key'
+openai.api_key = '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'
 
 # 用于读取txt文件的函数
 # Function to read txt files
@@ -37,7 +39,7 @@ def read_files(files):
 # 用于获取回答的函数，使用了OpenAI的Davinci模型
 # Function to get answer from OpenAI Davinci model
 def ask_gpt(question, text):
-    prompt = f"{text[:2000-len(question)-2]}\n\n{question}"
+    prompt = f"{text}\n\n{question}"
     response = openai.Completion.create(
         engine="text-davinci-003",
         prompt=prompt,
@@ -48,8 +50,16 @@ def ask_gpt(question, text):
 
 # 列出所有需要读取的文件
 # List all files paths
-files = ['张一鸣微博2886条.pdf', '张一鸣微博创业思考231条精华版.pdf', 'zhanyiming.txt']
+files = ['张一鸣微博创业思考231条精华版.pdf','张一鸣微博2886条.pdf','zhanyiming.txt']
 all_text = read_files(files)
+
+tensorflow.config.list_physical_devices('GPU')
+
+summarizer = pipeline("summarization")
+while len(all_text) > 2000:
+    summary = summarizer(all_text, max_length = 200, min_length = 100, do_sample = False)
+
+all_text = summary[0]['summary_text']
 
 # 回答问题，知道用户输入exit
 while True:
