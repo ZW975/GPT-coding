@@ -1,11 +1,10 @@
 import openai
 import PyPDF2
-from transformers import pipeline
-import tensorflow
+from summarizer import Summarizer  # Import BertSummarizer.
 
 # 设置API Key
 # Setting OpenAI API Key
-openai.api_key = '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'
+openai.api_key = 'API KEY'
 
 # 用于读取txt文件的函数
 # Function to read txt files
@@ -39,7 +38,11 @@ def read_files(files):
 # 用于获取回答的函数，使用了OpenAI的Davinci模型
 # Function to get answer from OpenAI Davinci model
 def ask_gpt(question, text):
-    prompt = f"{text}\n\n{question}"
+    model = Summarizer()
+    # 究极无敌耗时间的摘要生成
+    # Create a summary for all the files
+    summarized_text = model(text, ratio=0.007)
+    prompt = f"{summarized_text}\n\n{question}"
     response = openai.Completion.create(
         engine="text-davinci-003",
         prompt=prompt,
@@ -53,14 +56,6 @@ def ask_gpt(question, text):
 files = ['张一鸣微博创业思考231条精华版.pdf','张一鸣微博2886条.pdf','zhanyiming.txt']
 all_text = read_files(files)
 
-tensorflow.config.list_physical_devices('GPU')
-
-summarizer = pipeline("summarization")
-while len(all_text) > 2000:
-    summary = summarizer(all_text, max_length = 200, min_length = 100, do_sample = False)
-
-all_text = summary[0]['summary_text']
-
 # 回答问题，知道用户输入exit
 while True:
     question = input("请提问: ")
@@ -70,12 +65,7 @@ while True:
     answer = ask_gpt(question, all_text)
     print("回答:", answer)
 
-# 缺点
-# 由于OpenAI API存在prompt数量限制，每次只能读取少量文本，在读取的文本数据未进行清洗的情况下有51万余token
-# 而每次能上传的token数量只有4097个
-
-# 改进思路
-# 1. 对于不同问题，选取不同的文件进行读取
-# 2. 删除多余空行，对读取数据进行清洗，通过减少token数量提高prompt质量
-# 3. 提前将文本翻译成英文，可以大幅度减少token占用数量
-# 4. 最后一种构想是使用gpt-3.5-turbo/gpt-4的chat功能将所有内容拆分后一点点喂给模型，最后提问
+# Alternative Approach
+# Clean data + use gpt-4-32k model + read a single file for a single question, which increase cost in money, add code comlexity, decrease cost in time
+# 其他的解决方案
+# 清理数据+使用gpt-4-32k模型+对于单个问题选择单个文件，会增加金钱成本，代码复杂度，但是减少每次运行时间
