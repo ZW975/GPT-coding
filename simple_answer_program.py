@@ -5,7 +5,7 @@ import tensorflow
 
 # 设置API Key
 # Setting OpenAI API Key
-openai.api_key = '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'
+openai.api_key = 'API KEY'
 
 # 用于读取txt文件的函数
 # Function to read txt files
